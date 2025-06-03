@@ -16,9 +16,15 @@ const queryOrderDetailById = (id) => {
 }
 
 // 取消，派送，完成接口
-const editOrderDetail = (params,id) => {
+const editOrderDetail = (params, id) => {
+  let url = '';
+  if (params.status === 3) {
+    url = `/order/dispatch/${id}`;
+  } else if (params.status === 4) {
+    url = `/order/complete/${id}`;
+  }
   return $axios({
-    url: '/order/dispatch/'+id,
+    url,
     method: 'put',
     data: { ...params }
   })

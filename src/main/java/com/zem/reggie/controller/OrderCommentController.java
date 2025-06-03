@@ -1,32 +1,62 @@
 package com.zem.reggie.controller;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
+import com.zem.reggie.common.BaseContext;
 import com.zem.reggie.common.R;
 import com.zem.reggie.entity.OrderComment;
 import com.zem.reggie.service.OrderCommentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/orderComment")
 public class OrderCommentController {
+
     @Autowired
     private OrderCommentService orderCommentService;
+
     /**
-     * 用户提交订单评论
+     * 用户提交评论
      */
     @PostMapping
     public R<String> submitComment(@RequestBody OrderComment orderComment) {
-        orderCommentService.save(orderComment);
-        return R.success("评论提交成功");
+        // 设置当前用户ID
+        Long userId = BaseContext.getCurrentId();
+        orderComment.setUserId(userId);
+
+        return orderCommentService.submitComment(orderComment);
     }
+
     /**
-     * 管理端查看订单评论
+     * 用户查看自己的评论
      */
-    @GetMapping("/{orderId}")
-    public R<OrderComment> getCommentByOrderId(@PathVariable Long orderId) {
-        log.info("收到订单评论查询请求，订单ID：{}", orderId);
-        OrderComment orderComment = orderCommentService.getOne(new LambdaQueryWrapper<OrderComment>().eq(OrderComment::getOrderId, orderId));
-        return R.success(orderComment);
+    @GetMapping("/user")
+    public R<List<OrderComment>> getUserComments() {
+        Long userId = BaseContext.getCurrentId();
+        return orderCommentService.getUserComments(userId);
+    }
+
+    /**
+     * 用户修改自己的评论
+     */
+    @PutMapping
+    public R<String> updateUserComment(@RequestBody OrderComment orderComment) {
+        // 设置当前用户ID
+        Long userId = BaseContext.getCurrentId();
+        orderComment.setUserId(userId);
+
+        return orderCommentService.updateUserComment(orderComment);
+    }
+
+    /**
+     * 用户删除自己的评论
+     */
+    @DeleteMapping("/{commentId}")
+    public R<String> deleteUserComment(@PathVariable Long commentId) {
+        return orderCommentService.deleteUserComment(commentId);
     }
 }
+

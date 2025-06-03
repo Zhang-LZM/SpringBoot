@@ -201,6 +201,140 @@
           <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
         </span> -->
     </el-dialog>
+
+    <!-- 管理端评论列表页面 -->
+    <template>
+        <div class="comment-management">
+            <el-card>
+                <div class="card-header">
+                    <h3>订单评论管理</h3>
+                </div>
+                <el-table :data="commentList" stripe>
+                    <el-table-column prop="orderNumber" label="订单编号"></el-table-column>
+                    <el-table-column prop="userName" label="用户名称"></el-table-column>
+                    <el-table-column prop="content" label="评论内容"></el-table-column>
+                    <el-table-column prop="createTime" label="评论时间"></el-table-column>
+                    <el-table-column prop="replyContent" label="回复内容"></el-table-column>
+                    <el-table-column prop="replyTime" label="回复时间"></el-table-column>
+                    <el-table-column label="操作">
+                        <template #cell="scope">
+                            <el-button size="mini" type="primary" @click="replyComment(scope.row)">回复</el-button>
+                            <el-button size="mini" type="danger" @click="deleteComment(scope.row.id)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="[10, 20, 30, 50]"
+                        :page-size="pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total">
+                </el-pagination>
+            </el-card>
+
+            <!-- 回复评论模态框 -->
+            <el-dialog :visible.sync="replyVisible" title="回复评论">
+                <template #content>
+                    <div class="comment-info">
+                        <p><strong>订单编号:</strong> {{ currentComment.orderNumber }}</p>
+                        <p><strong>用户名称:</strong> {{ currentComment.userName }}</p>
+                        <p><strong>评论内容:</strong> {{ currentComment.content }}</p>
+                    </div>
+                    <el-input v-model="replyContent" placeholder="请输入回复内容" type="textarea" :rows="4"></el-input>
+                </template>
+                <template #footer>
+                    <el-button @click="replyVisible = false">取消</el-button>
+                    <el-button type="primary" @click="submitReply">提交</el-button>
+                </template>
+            </el-dialog>
+        </div>
+    </template>
+
+    <script>
+        export default {
+            data() {
+                return {
+                    commentList: [],
+                    currentPage: 1,
+                    pageSize: 10,
+                    total: 0,
+                    replyVisible: false,
+                    replyContent: '',
+                    currentComment: {}
+                };
+            },
+            created() {
+                this.getCommentList();
+            },
+            methods: {
+                getCommentList() {
+                    // 获取评论列表的API调用
+                    axios.get('/admin/orderComment/list', {
+                        params: {
+                            page: this.currentPage,
+                            pageSize: this.pageSize
+                        }
+                    }).then(res => {
+                        if (res.data.code === 1) {
+                            this.commentList = res.data.data.records;
+                            this.total = res.data.data.total;
+                        }
+                    });
+                },
+                replyComment(comment) {
+                    this.replyVisible = true;
+                    this.currentComment = comment;
+                    this.replyContent = comment.replyContent || '';
+                },
+                submitReply() {
+                    if (!this.replyContent.trim()) {
+                        this.$message.warning('请输入回复内容');
+                        return;
+                    }
+
+                    axios.post(`/admin/orderComment/reply/${this.currentComment.id}`, {
+                        replyContent: this.replyContent
+                    }).then(res => {
+                        if (res.data.code === 1) {
+                            this.$message.success('回复成功');
+                            this.replyVisible = false;
+                            this.getCommentList();
+                        } else {
+                            this.$message.error(res.data.msg || '回复失败');
+                        }
+                    });
+                },
+                deleteComment(commentId) {
+                    this.$confirm('确定要删除这条评论吗？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        axios.delete(`/admin/orderComment/${commentId}`)
+                            .then(res => {
+                                if (res.data.code === 1) {
+                                    this.$message.success('评论删除成功');
+                                    this.getCommentList();
+                                } else {
+                                    this.$message.error(res.data.msg || '评论删除失败');
+                                }
+                            });
+                    }).catch(() => {});
+                },
+                handleSizeChange(size) {
+                    this.pageSize = size;
+                    this.getCommentList();
+                },
+                handleCurrentChange(page) {
+                    this.currentPage = page;
+                    this.getCommentList();
+                }
+            }
+        };
+    </script>
+
 </div>
 <!-- 开发环境版本，包含了有帮助的命令行警告 -->
 <script src="../../plugins/vue/vue.js"></script>

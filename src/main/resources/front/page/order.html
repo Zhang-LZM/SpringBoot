@@ -52,6 +52,43 @@
                     </van-cell>
                 </van-list>
             </div>
+            <!-- 在订单列表页面的订单卡片组件中添加 -->
+            <div class="order-card" v-for="order in orderList" :key="order.id">
+                <!-- 现有订单信息展示代码 -->
+
+                <!-- 添加评论按钮，仅当订单状态为已完成(4)时显示 -->
+                <div class="btn" v-if="order.status === 4">
+                    <div class="btnAgain" @click="addOrderAgain(order)">再来一单</div>
+                    <div class="btnComment" @click="showCommentModal(order)">评论</div>
+                </div>
+
+                <!-- 显示已有的评论 -->
+                <div class="comment-container" v-if="order.comment">
+                    <div class="comment-content">
+                        <p>{{ order.comment.content }}</p>
+                        <p class="comment-time">{{ order.comment.createTime }}</p>
+                    </div>
+                    <!-- 显示管理员回复 -->
+                    <div class="admin-reply" v-if="order.comment.replyContent">
+                        <p class="reply-title">商家回复:</p>
+                        <p>{{ order.comment.replyContent }}</p>
+                        <p class="reply-time">{{ order.comment.replyTime }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 评论模态框 -->
+            <el-dialog :visible.sync="commentVisible" title="评论订单">
+                <template #content>
+                    <el-input v-model="commentContent" placeholder="请输入评论内容" type="textarea" :rows="4"></el-input>
+                </template>
+                <template #footer>
+                    <el-button @click="commentVisible = false">取消</el-button>
+                    <el-button type="primary" @click="submitComment(orderId)">提交</el-button>
+                </template>
+            </el-dialog>
+
+
             <div class="divNoData" v-else>
                 <div class="divContainer">
                     <img src="./../images/no_order.png"/>
@@ -70,100 +107,184 @@
         <script src="./../js/request.js"></script>
         <script src="./../api/order.js"></script>
         <script>
-        new Vue({
-            el:"#order",
-            data(){
-                return {
-                    paging:{
-                        page:1,
-                        pageSize:5
-                    },
-                    orderList:[],
-                    loading:false,
-                    finished:false
-                }
-            },
-            computed:{},
-            created(){
-                this.initData()
-            },
-            mounted(){},
-            methods:{
-                goBack(){
-                    const url = document.referrer
-                    //表示是从订单页面跳转过来的
-                    if(url.includes('success')){
-                        window.requestAnimationFrame(()=>{
-                                window.location.href= '/front/index.html'
-                        })   
-                    }else{
-                        history.go(-1)
+            new Vue({
+                el: "#order",
+                data() {
+                    return {
+                        paging: {
+                            page: 1,
+                            pageSize: 5
+                        },
+                        orderList: [],
+                        loading: false,
+                        finished: false
                     }
                 },
-                initData(){
-                    this.getList()
+                computed: {},
+                created() {
+                    this.initData()
                 },
-                async getList(){
-                    if(this.finished){
-                        this.loading = false;
-                        return
-                    }
-                    const res = await orderPagingApi(this.paging)
-                    if(res.code === 1){
-                        this.orderList.push(...res.data.records)
-                        let records = res.data.records
-                        if(records && Array.isArray(records)){
-                            records.forEach(item=>{
-                                let number = 0
-                                item.orderDetails.forEach(ele=>{
-                                    number += ele.number
-                                })
-                                item.sumNum = number
+                mounted() {
+                },
+                methods: {
+                    goBack() {
+                        const url = document.referrer
+                        //表示是从订单页面跳转过来的
+                        if (url.includes('success')) {
+                            window.requestAnimationFrame(() => {
+                                window.location.href = '/front/index.html'
                             })
+                        } else {
+                            history.go(-1)
                         }
-                        this.loading = false;
-                        if(this.paging.page >= res.data.pages){
-                            this.finished = true;
+                    },
+                    initData() {
+                        this.getList()
+                    },
+                    async getList() {
+                        if (this.finished) {
+                            this.loading = false;
+                            return
                         }
-                        this.paging.page = this.paging.page + 1
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
-                    }
-                },
-                async addOrderAgain(order){
-                    const res = await orderAgainApi({id:order.id})
-                    if(res.code === 1){
-                        window.requestAnimationFrame(()=>{
-                            window.location.href= '/front/index.html'
-                        })
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
-                    }
-                },
-                getStatus(status){
-                    let str = ''
-                    switch(status){
-                        case 1:
-                            str =  '待付款'
-                        break;
-                        case 2:
-                            str =  '正在派送'
-                        break;
-                        case 3:
-                            str =  '已派送'
-                        break;
-                        case 4:
-                            str =  '已完成'
-                        break;
-                        case 5:
-                            str =  '已取消'
-                        break;
+                        const res = await orderPagingApi(this.paging)
+                        if (res.code === 1) {
+                            this.orderList.push(...res.data.records)
+                            let records = res.data.records
+                            if (records && Array.isArray(records)) {
+                                records.forEach(item => {
+                                    let number = 0
+                                    item.orderDetails.forEach(ele => {
+                                        number += ele.number
+                                    })
+                                    item.sumNum = number
+                                })
+                            }
+                            this.loading = false;
+                            if (this.paging.page >= res.data.pages) {
+                                this.finished = true;
+                            }
+                            this.paging.page = this.paging.page + 1
+                        } else {
+                            this.$notify({type: 'warning', message: res.msg});
+                        }
+                    },
+                    async addOrderAgain(order) {
+                        const res = await orderAgainApi({id: order.id})
+                        if (res.code === 1) {
+                            window.requestAnimationFrame(() => {
+                                window.location.href = '/front/index.html'
+                            })
+                        } else {
+                            this.$notify({type: 'warning', message: res.msg});
+                        }
+                    },
+                    getStatus(status) {
+                        let str = ''
+                        switch (status) {
+                            case 1:
+                                str = '待付款'
+                                break;
+                            case 2:
+                                str = '正在派送'
+                                break;
+                            case 3:
+                                str = '已派送'
+                                break;
+                            case 4:
+                                str = '已完成'
+                                break;
+                            case 5:
+                                str = '已取消'
+                                break;
 
+                        }
+                        return str
                     }
-                    return str
                 }
-            }
-        })
+            })
+            export default {
+                data() {
+                    return {
+                        orderList: [],
+                        commentVisible: false,
+                        commentContent: '',
+                        orderId: null
+                    };
+                },
+                created() {
+                    this.getOrderList();
+                },
+                methods: {
+                    getOrderList() {
+                        // 获取订单列表的API调用
+                        axios.get('/order/list')
+                            .then(res => {
+                                if (res.data.code === 1) {
+                                    this.orderList = res.data.data;
+                                }
+                            });
+                    },
+                    showCommentModal(order) {
+                        this.commentVisible = true;
+                        this.orderId = order.id;
+                        this.commentContent = '';
+                    },
+                    submitComment(orderId) {
+                        if (!this.commentContent.trim()) {
+                            this.$message.warning('请输入评论内容');
+                            return;
+                        }
+
+                        const comment = {
+                            orderId: orderId,
+                            userId: this.userId, // 假设userId已经获取
+                            content: this.commentContent
+                        };
+
+                        // 调用提交评论接口
+                        axios.post('/orderComment', comment)
+                            .then(res => {
+                                if (res.data.code === 1) {
+                                    this.$message.success('评论提交成功');
+                                    this.commentVisible = false;
+                                    this.commentContent = '';
+                                    // 刷新订单列表以显示新评论
+                                    this.getOrderList();
+                                } else {
+                                    this.$message.error(res.data.msg || '评论提交失败');
+                                }
+                            })
+                            .catch(err => {
+                                this.$message.error('请求出错了：' + err);
+                            });
+                    },
+                    // 用户修改评论
+                    editComment(comment) {
+                        this.commentVisible = true;
+                        this.orderId = comment.orderId;
+                        this.commentContent = comment.content;
+                    },
+                    // 用户删除评论
+                    deleteComment(commentId) {
+                        this.$confirm('确定要删除这条评论吗？', '提示', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }).then(() => {
+                            axios.delete(`/orderComment/${commentId}`)
+                                .then(res => {
+                                    if (res.data.code === 1) {
+                                        this.$message.success('评论删除成功');
+                                        this.getOrderList();
+                                    } else {
+                                        this.$message.error(res.data.msg || '评论删除失败');
+                                    }
+                                });
+                        }).catch(() => {
+                        });
+                    }
+                }
+            };
         </script>
     </body>
 </html>
