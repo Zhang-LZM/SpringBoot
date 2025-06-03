@@ -7,10 +7,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 @Data
 @TableName("order_comment")
-public class OrderComment {
+public class OrderComment implements Serializable{
     @TableId
     private Long id;
     private Long orderId;
@@ -18,6 +19,7 @@ public class OrderComment {
     private String content;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private String reply; // 回复内容
     private String replyContent;
     private LocalDateTime replyTime;
     private Integer isDeleted;

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>管理端评论模块</title>
+    <!-- 引入必要的CSS和JS文件 -->
+</head>
+<body>
+
+<!-- 添加菜品模块 -->
+<div id="add-dish-module">
+    <!-- 添加菜品的表单和按钮 -->
+</div>
+
+<!-- 评论模块 -->
+<div id="comment-module">
+    <h2>订单评论管理</h2>
+    <input type="text" id="order-number-input" placeholder="请输入订单号">
+    <button onclick="getComment()">查看评论</button>
+    <button onclick="deleteComment()">删除评论</button>
+    <input type="text" id="reply-input" placeholder="请输入回复内容">
+    <button onclick="replyComment()">回复评论</button>
+    <div id="comment-content"></div>
+</div>
+
+<script>
+    function getComment() {
+        const orderNumber = document.getElementById('order-number-input').value;
+        axios.get(`/orderComment/${orderNumber}`)
+            .then(response => {
+                const comment = response.data.data;
+                document.getElementById('comment-content').innerHTML = `订单号：${comment.orderNumber}<br>评论内容：${comment.content}<br>回复内容：${comment.reply}`;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    function deleteComment() {
+        const orderNumber = document.getElementById('order-number-input').value;
+        axios.delete(`/orderComment/${orderNumber}`)
+            .then(response => {
+                alert(response.data.message);
+                document.getElementById('comment-content').innerHTML = '';
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    function replyComment() {
+        const orderNumber = document.getElementById('order-number-input').value;
+        const reply = document.getElementById('reply-input').value;
+        axios.put(`/orderComment/reply/${orderNumber}`, reply)
+            .then(response => {
+                alert(response.data.message);
+                getComment();
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+</script>
+
+</body>
+</html>
