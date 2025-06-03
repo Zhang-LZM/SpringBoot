@@ -24,7 +24,7 @@
             <div class="divUser">
                 <img src="./../images/headPage.png"/>
                 <div class="desc">
-                    <div class="divName">林之迷 <img src="./../images/women.png"/></div>
+                    <div class="divName">张建国 <img src="./../images/women.png"/></div>
                     <div class="divPhone">{{userPhone}}</div>
                 </div>
             </div>
@@ -62,6 +62,8 @@
                 </div>
                 <div class="btn" v-if="order[0].status === 4">
                     <div class="btnAgain" @click="addOrderAgain">再来一单</div>
+                    <!-- 添加评论按钮 -->
+                    <div class="btnComment" @click="goToCommentPage(order[0].id)">评论订单</div>
                 </div>
             </div>
             <div class="quitLogin" @click="toPageLogin">
