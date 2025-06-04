@@ -6,192 +6,434 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no,minimal-ui">
     <title>菩提阁</title>
     <link rel="icon" href="./../images/favico.ico">
-    <!--element-ui的样式-->
     <link rel="stylesheet" href="../../backend/plugins/element-ui/index.css" />
-    <!-- 引入样式  -->
     <link rel="stylesheet" href="../styles/index.css" />
-    <!--引入vant样式-->
     <link rel="stylesheet" href="../styles/vant.min.css"/>
-    <!--本页面内容的样式-->
     <link rel="stylesheet" href="./../styles/user.css" />
+    <!-- 新增评论模块样式 -->
+    <style>
+        /* 仅添加必要的样式修复 */
+        .el-dialog__wrapper {
+            z-index: 9999 !important;
+        }
+
+        .el-textarea__inner {
+            font-family: inherit;
+            font-size: 15px;
+            padding: 15px;
+        }
+    </style>
 </head>
 <body>
-    <div id="user" class="app">
-        <div class="divHead">
-            <div class="divTitle">
-                <i class="el-icon-arrow-left" @click="goBack"></i>个人中心
-            </div>
-            <div class="divUser">
-                <img src="./../images/headPage.png"/>
-                <div class="desc">
-                    <div class="divName">张建国 <img src="./../images/women.png"/></div>
-                    <div class="divPhone">{{userPhone}}</div>
-                </div>
-            </div>
+<div id="user" class="app">
+    <!-- 头部保持不变 -->
+    <div class="divHead">
+        <div class="divTitle">
+            <i class="el-icon-arrow-left" @click="goBack"></i>个人中心
         </div>
-        <div class="divContent">
-            <div class="divLinks">
-                <div class="item" @click="toAddressPage">
-                    <img src="./../images/locations.png"/>
-                    <span>地址管理</span>
-                    <i class="el-icon-arrow-right"></i>
-                </div>
-                <div class="divSplit"></div>
-                <div class="item" @click="toOrderPage">
-                    <img src="./../images/orders.png"/>
-                    <span>历史订单</span>
-                    <i class="el-icon-arrow-right"></i>
-                </div>
-            </div>
-            <div class="divOrders" v-if="order[0]">
-                <div class="title">最新订单</div>
-                <div class="timeStatus">
-                    <span>{{order[0].orderTime}}</span>
-                    <span>{{getStatus(order[0].status)}}</span>
-                    <!-- <span>正在派送</span> -->
-                </div>
-                <div class="dishList">
-                    <div v-for="(item,index) in order[0].orderDetails" :key="index" class="item">
-                        <span>{{item.name}}</span>
-                        <span>x{{item.number}}</span>
-                    </div>
-                </div>
-                <div class="result">
-                    <span>共{{order[0].sumNum}} 件商品,实付</span>
-                    <span class="price">￥{{order[0].amount}}</span>
-                </div>
-                <div class="btn" v-if="order[0].status === 4">
-                    <div class="btnAgain" @click="addOrderAgain">再来一单</div>
-                    <!-- 添加评论按钮 -->
-                    <div class="btnComment" @click="goToCommentPage(order[0].id)">评论订单</div>
-                </div>
-            </div>
-            <div class="quitLogin" @click="toPageLogin">
-                退出登录
+        <div class="divUser">
+            <img src="./../images/headPage.png"/>
+            <div class="desc">
+                <div class="divName">张建国 <img src="./../images/women.png"/></div>
+                <div class="divPhone">{{userPhone}}</div>
             </div>
         </div>
     </div>
-    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <!-- 引入组件库 -->
-    <script src="../../backend/plugins/element-ui/index.js"></script>
-    <!-- 引入vant组件 -->
-    <script src="./../js/vant.min.js"></script>    
-    <!--不同屏幕尺寸根字体设置-->
-    <script src="./../js/base.js"></script>
-    <!-- 引入axios -->
-    <script src="../../backend/plugins/axios/axios.min.js"></script>
-    <script src="./../js/request.js"></script>
-    <script src="./../api/order.js"></script>
-    <script src="./../api/login.js"></script>
-    <script>
-        new Vue({
-            el:"#user",
-            data(){
-                return {
-                    form:{
-                        phone:'',
-                        code:''
-                    },
-                    msgFlag:false,
-                    order:[{
-                        orderTime:'',//下单时间
-                        status:undefined,//订单状态 1已结账，2未结账，3已退单，4已完成，5已取消
-                        orderDetails:[{
-                            name:'',//菜品名称
-                            number:undefined,//数量
-                        }],//明细
-                        amount:undefined,//实收金额
-                        sumNum:0,//菜品总数
-                    }],
+
+    <!-- 内容区域保持不变 -->
+    <div class="divContent">
+        <div class="divLinks">
+            <div class="item" @click="toAddressPage">
+                <img src="./../images/locations.png"/>
+                <span>地址管理</span>
+                <i class="el-icon-arrow-right"></i>
+            </div>
+            <div class="divSplit"></div>
+            <div class="item" @click="toOrderPage">
+                <img src="./../images/orders.png"/>
+                <span>历史订单</span>
+                <i class="el-icon-arrow-right"></i>
+            </div>
+        </div>
+        <div class="divOrders" v-if="order[0]">
+            <div class="title">最新订单</div>
+            <div class="timeStatus">
+                <span>{{order[0].orderTime}}</span>
+                <span>{{getStatus(order[0].status)}}</span>
+            </div>
+            <div class="dishList">
+                <div v-for="(item,index) in order[0].orderDetails" :key="index" class="item">
+                    <span>{{item.name}}</span>
+                    <span>x{{item.number}}</span>
+                </div>
+            </div>
+            <div class="result">
+                <span>共{{order[0].sumNum}} 件商品,实付</span>
+                <span class="price">￥{{order[0].amount}}</span>
+            </div>
+            <div class="btn" v-if="order[0].status === 4">
+                <div class="btnAgain" @click="addOrderAgain">再来一单</div>
+                <!-- 添加评论按钮 -->
+                <div class="btnComment" @click="openCommentModal">评论订单</div>
+            </div>
+        </div>
+
+        <!-- 评论管理模块保持不变 -->
+        <div class="comment-module">
+            <h3>我的订单评论</h3>
+            <div class="comment-input-group">
+                <input type="text" v-model="orderNumber" placeholder="请输入订单号">
+                <button @click="getUserComment">查看评论</button>
+                <button @click="userDeleteComment">删除评论</button>
+            </div>
+            <div class="comment-input-group">
+                <input type="text" v-model="updateContent" placeholder="请输入修改后的评论内容">
+                <button @click="updateComment">修改评论</button>
+            </div>
+            <div class="comment-input-group">
+                <input type="text" v-model="replyContent" placeholder="请输入回复内容">
+                <button @click="userReplyComment">回复评论</button>
+            </div>
+            <div class="comment-content" v-if="currentComment">
+                <div class="comment-item">
+                    <p><strong>订单号：</strong>{{ currentComment.orderNumber }}</p>
+                    <p><strong>评论内容：</strong>{{ currentComment.content }}</p>
+                    <p v-if="currentComment.reply"><strong>回复内容：</strong>{{ currentComment.reply }}</p>
+                </div>
+            </div>
+            <div v-else class="comment-content" style="text-align: center; color: #666;">
+                暂无评论内容
+            </div>
+        </div>
+
+        <div class="quitLogin" @click="toPageLogin">
+            退出登录
+        </div>
+    </div>
+
+    <!-- 评论模态框 - 只修改必要的部分 -->
+    <el-dialog :visible.sync="commentModalVisible" title="评论订单" @opened="handleDialogOpened">
+        <div class="comment-form">
+            <el-input
+                    v-model="commentContent"
+                    placeholder="请输入评论内容"
+                    class="comment-input"
+                    type="textarea"
+                    :rows="4"
+                    resize="none"
+                    ref="commentInputRef"
+            ></el-input>
+            <div class="rating-container">
+                <span class="rating-label">评分：</span>
+                <el-rate v-model="rating"></el-rate>
+                <span class="rating-value">{{ rating }}分</span>
+            </div>
+        </div>
+        <div slot="footer" class="dialog-footer">
+            <el-button
+                    @click="commentModalVisible = false"
+                    class="cancel-button"
+            >
+                取消
+            </el-button>
+            <el-button
+                    type="primary"
+                    @click="submitComment"
+                    class="submit-button"
+                    :disabled="!isFormValid"
+            >
+                提交评论
+            </el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script src="../../backend/plugins/vue/vue.js"></script>
+<script src="../../backend/plugins/element-ui/index.js"></script>
+<script src="./../js/vant.min.js"></script>
+<script src="./../js/base.js"></script>
+<script src="../../backend/plugins/axios/axios.min.js"></script>
+<script src="./../js/request.js"></script>
+<script src="./../api/order.js"></script>
+<script src="./../api/login.js"></script>
+
+<script>
+    new Vue({
+        el: "#user",
+        data() {
+            return {
+                form: {
+                    phone: '',
+                    code: ''
+                },
+                msgFlag: false,
+                order: [{
+                    orderTime: '',//下单时间
+                    status: undefined,//订单状态 1已结账，2未结账，3已退单，4已完成，5已取消
+                    orderDetails: [{
+                        name: '',//菜品名称
+                        number: undefined,//数量
+                    }],//明细
+                    amount: undefined,//实收金额
+                    sumNum: 0,//菜品总数
+                }],
+                // 添加缺失的userPhone定义
+                userPhone: '',
+                // 评论相关数据
+                commentModalVisible: false,
+                commentContent: '',
+                rating: 5, // 默认5分
+                // 评论管理模块数据
+                orderNumber: '',
+                updateContent: '',
+                replyContent: '',
+                currentComment: null
+            }
+        },
+        computed: {
+            isFormValid() {
+                return this.commentContent.trim() !== '';
+            }
+        },
+        created() {
+            this.userPhone = sessionStorage.getItem("userPhone")
+            this.initData()
+        },
+        mounted() {
+        },
+        methods: {
+            goBack() {
+                history.go(-1)
+            },
+            toAddressPage() {
+                window.requestAnimationFrame(() => {
+                    window.location.href = '/front/page/address.html'
+                })
+            },
+            toOrderPage() {
+                window.requestAnimationFrame(() => {
+                    window.location.href = '/front/page/order.html'
+                })
+            },
+            initData() {
+                this.getLatestOrder()
+            },
+            async getLatestOrder() {
+                const params = {
+                    page: 1,
+                    pageSize: 1
+                }
+                const res = await orderPagingApi(params)
+                if (res.code === 1) {
+                    this.order = res.data.records
+                    if (this.order && this.order[0].orderDetails) {
+                        let number = 0
+                        this.order[0].orderDetails.forEach(item => {
+                            number += item.number
+                        })
+                        this.order[0].sumNum = number
+                    }
+                } else {
+                    this.$notify({type: 'warning', message: res.msg});
                 }
             },
-            computed:{},
-            created(){
-                this.userPhone =sessionStorage.getItem("userPhone")
-                this.initData()
+            getStatus(status) {
+                let str = ''
+                switch (status) {
+                    case 1:
+                        str = '待付款'
+                        break;
+                    case 2:
+                        str = '正在派送'
+                        break;
+                    case 3:
+                        str = '已派送'
+                        break;
+                    case 4:
+                        str = '已完成'
+                        break;
+                    case 5:
+                        str = '已取消'
+                        break;
+                }
+                return str
             },
-            mounted(){},
-            methods:{
-                goBack(){
-                    history.go(-1)
-                },
-                toAddressPage(){
-                    window.requestAnimationFrame(()=>{
-                        window.location.href = '/front/page/address.html'
-                    })  
-                },
-                toOrderPage(){
-                    window.requestAnimationFrame(()=>{
-                        window.location.href = '/front/page/order.html'
-                    }) 
-                },
-                initData(){
-                    this.getLatestOrder()
-                },
-                async getLatestOrder(){
-                    const params = {
-                        page:1,
-                        pageSize:1
+            async addOrderAgain() {
+                const res = await orderAgainApi({id: this.order[0].id})
+                if (res.code === 1) {
+                    window.requestAnimationFrame(() => {
+                        window.location.href = '/front/index.html'
+                    })
+                } else {
+                    this.$notify({type: 'warning', message: res.msg});
+                }
+            },
+            async toPageLogin() {
+                const res = await loginoutApi()
+                if (res.code === 1) {
+                    window.requestAnimationFrame(() => {
+                        window.location.href = '/front/page/login.html'
+                    })
+                } else {
+                    this.$notify({type: 'warning', message: res.msg});
+                }
+            },
+            // 修复评论输入问题的方法
+            openCommentModal() {
+                this.commentModalVisible = true;
+            },
+            handleDialogOpened() {
+                // 确保对话框完全打开后再聚焦输入框
+                this.$nextTick(() => {
+                    if (this.$refs.commentInputRef) {
+                        this.$refs.commentInputRef.focus();
                     }
-                    const res = await orderPagingApi(params)
-                    if(res.code === 1){
-                        this.order = res.data.records
-                        if(this.order && this.order[0].orderDetails){
-                            let number = 0
-                            this.order[0].orderDetails.forEach(item=>{
-                                number += item.number
-                            })
-                            this.order[0].sumNum = number
-                        }
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
-                    }
-                },
-                getStatus(status){
-                    let str = ''
-                    switch(status){
-                        case 1:
-                            str =  '待付款'
-                        break;
-                        case 2:
-                            str =  '正在派送'
-                        break;
-                        case 3:
-                            str =  '已派送'
-                        break;
-                        case 4:
-                            str =  '已完成'
-                        break;
-                        case 5:
-                            str =  '已取消'
-                        break;
+                });
+            },
+            async submitComment() {
+                if (!this.isFormValid) {
+                    this.$message.warning('请输入评论内容');
+                    return;
+                }
 
+                try {
+                    const commentData = {
+                        orderId: this.order[0].id,
+                        content: this.commentContent,
+                        rating: this.rating
+                    };
+
+                    const response = await submitOrderCommentApi(commentData);
+
+                    if (response.code === 1) {
+                        this.$message.success('评论提交成功！');
+                        this.commentContent = '';
+                        this.rating = 5;
+                        this.commentModalVisible = false;
+                        // 刷新订单数据
+                        this.getLatestOrder();
+                    } else {
+                        this.$message.error(response.msg || '提交评论失败');
                     }
-                    return str
-                },
-                async addOrderAgain(){
-                    const res = await orderAgainApi({id:this.order[0].id})
-                    if(res.code === 1){
-                        window.requestAnimationFrame(()=>{
-                            window.location.href = '/front/index.html'
-                        }) 
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
+                } catch (error) {
+                    console.error(error);
+                    this.$message.error('提交评论失败，请稍后再试');
+                }
+            },
+            // 评论管理方法保持不变
+            async getUserComment() {
+                if (!this.orderNumber) {
+                    this.$message.warning('请输入订单号');
+                    return;
+                }
+
+                try {
+                    const response = await axios.get(`/orderComment/${this.orderNumber}`);
+                    if (response.data.code === 1) {
+                        this.currentComment = response.data.data;
+                        this.$message.success('获取评论成功');
+                    } else {
+                        this.$message.error(response.data.msg || '获取评论失败');
+                        this.currentComment = null;
                     }
-                },
-                async toPageLogin(){
-                    const res = await loginoutApi()
-                    if(res.code === 1){
-                        window.requestAnimationFrame(()=>{
-                            window.location.href = '/front/page/login.html'
-                        }) 
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
-                    }                
+                } catch (error) {
+                    console.error(error);
+                    this.$message.error('获取评论失败，请稍后再试');
+                    this.currentComment = null;
+                }
+            },
+
+            async userDeleteComment() {
+                if (!this.orderNumber) {
+                    this.$message.warning('请输入订单号');
+                    return;
+                }
+
+                if (!confirm('确定要删除该评论吗？')) {
+                    return;
+                }
+
+                try {
+                    const response = await axios.delete(`/orderComment/user/${this.orderNumber}`);
+                    if (response.data.code === 1) {
+                        this.$message.success('评论删除成功');
+                        this.currentComment = null;
+                    } else {
+                        this.$message.error(response.data.message || '删除评论失败');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.$message.error('删除评论失败，请稍后再试');
+                }
+            },
+
+            async updateComment() {
+                if (!this.orderNumber) {
+                    this.$message.warning('请输入订单号');
+                    return;
+                }
+
+                if (!this.updateContent) {
+                    this.$message.warning('请输入修改后的评论内容');
+                    return;
+                }
+
+                try {
+                    const commentData = {
+                        orderId: this.orderNumber,
+                        content: this.updateContent,
+                        rating: this.rating || 5
+                    };
+
+                    const response = await axios.put(`/orderComment/${this.orderNumber}`, commentData);
+
+                    if (response.data.code === 1) {
+                        this.$message.success('评论修改成功！');
+                        this.getUserComment();
+                        this.updateContent = '';
+                    } else {
+                        this.$message.error(response.data.msg || '修改评论失败');
+                    }
+                } catch (error) {
+                    console.error('修改评论失败:', error);
+                    if (error.response) {
+                        this.$message.error(`修改评论失败: ${error.response.status} - ${error.response.data.message || '服务器错误'}`);
+                    } else {
+                        this.$message.error('修改评论失败，请检查网络连接');
+                    }
+                }
+            },
+
+            async userReplyComment() {
+                if (!this.orderNumber) {
+                    this.$message.warning('请输入订单号');
+                    return;
+                }
+
+                if (!this.replyContent) {
+                    this.$message.warning('请输入回复内容');
+                    return;
+                }
+
+                try {
+                    const response = await axios.put(`/orderComment/user/reply/${this.orderNumber}`, {
+                        reply: this.replyContent
+                    });
+
+                    if (response.data.code === 1) {
+                        this.$message.success('回复评论成功！');
+                        this.getUserComment();
+                        this.replyContent = '';
+                    } else {
+                        this.$message.error(response.data.message || '回复评论失败');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.$message.error('回复评论失败，请稍后再试');
                 }
             }
-        })
-    </script>
+        }
+    })
+</script>
 </body>
 </html>

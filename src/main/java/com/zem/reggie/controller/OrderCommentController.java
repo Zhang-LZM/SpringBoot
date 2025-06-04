@@ -22,8 +22,9 @@ public class OrderCommentController {
          */
         @PostMapping
         public R<String> submitComment(@RequestBody OrderComment orderComment) {
-            orderCommentService.save(orderComment);
-            return R.success("评论提交成功");
+
+            return orderCommentService.submitComment(orderComment);
+            //return R.success("评论提交成功");
         }
 
         /**
